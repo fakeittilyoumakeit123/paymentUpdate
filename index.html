@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        table { width: 60%; margin: auto; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid black; }
+        th { background: #f4f4f4; }
+        button { padding: 8px 15px; cursor: pointer; }
+        .paid { background: #4CAF50; color: white; }
+        .pending { background: #FF5733; color: white; }
+    </style>
+</head>
+<body>
+
+    <h2>Payment Status</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Status</th>
+                <th>Date Paid</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="paymentTable">
+            <!-- Rows will be inserted here dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbx24fjlpbo3BVrGGVMhSnhbqyOv8XuEat518kerlkyAC1JnaWmpr9Km7cR8TqqB9hDanw/exec"; // Replace with actual script URL
+
+        document.addEventListener("DOMContentLoaded", fetchPaymentData);
+
+        function fetchPaymentData() {
+            fetch(`${scriptURL}?action=getStatus`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById("paymentTable");
+                    tableBody.innerHTML = "";
+
+                    for (let item in data) {
+                        const row = document.createElement("tr");
+
+                        row.innerHTML = `
+                            <td>${item}</td>
+                            <td class="${data[item].status === 'Paid' ? 'paid' : 'pending'}">${data[item].status}</td>
+                            <td>${data[item].date}</td>
+                            <td><button onclick="markPaid('${item}')" ${data[item].status === 'Paid' ? 'disabled' : ''}>Pay</button></td>
+                        `;
+
+                        tableBody.appendChild(row);
+                    }
+                })
+                .catch(error => console.error("Failed to fetch payment data:", error));
+        }
+
+        function markPaid(item) {
+            fetch(`${scriptURL}?action=markPaid&item=${item}`, { method: "GET" })
+                .then(response => response.json())
+                .then(data => {
+                    alert(`Payment updated for ${item}`);
+                    fetchPaymentData(); // Refresh table
+                })
+                .catch(error => console.error("Error marking as paid:", error));
+        }
+    </script>
+
+</body>
+</html>
